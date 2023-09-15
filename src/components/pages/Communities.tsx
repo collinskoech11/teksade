@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { api } from "@/utils/api";
-import { Button, Chip, Collapse, Loader, LoadingOverlay, Menu, Select, TextInput } from "@mantine/core";
+import { Button, Collapse, Menu, Select, TextInput } from "@mantine/core";
 import { BsFilter, BsFire, BsSearch } from "react-icons/bs";
 import { VscDiffAdded } from "react-icons/vsc";
 import React, { useState } from "react";
@@ -32,17 +32,13 @@ export default function CommunitiesPage() {
     technologies: selectedTechnologies,
     searchTerm: searchTerm,
   });
-  const announcements = api.announcements.getAnnouncements.useQuery();
-  const announcement = announcements.data?.[0];
   const [filtersOpen, { toggle }] = useDisclosure(false);
-  const [showBanner, setShowBanner] = useState(true);
 
   return (
     <>
       <PageSEO title={"Communities"} description={siteMetadata.community_description} />
       <Container>
         <div className="">
-          {showBanner && announcement && <StickyBanner announcement={announcement} onClose={() => setShowBanner(false)} />}
           <section className="my-8 flex w-full items-center justify-between ">
             <Menu trigger="hover" openDelay={100} closeDelay={4000}>
               <Menu.Target>
@@ -104,17 +100,21 @@ export default function CommunitiesPage() {
         <section className="grid grid-cols-1 gap-1 gap-x-2 sm:grid-cols-3 md:grid-cols-3 ">
           {communitiesList.data?.length
             ? communitiesList.data.map((community) => (
-                <CommmunityCard
-                  id={community.id}
-                  key={community.id}
-                  name={community.name}
-                  country={community.country}
-                  location={community.location}
-                  description={community.description}
-                  members={community._count.members}
-                  logoUrl={community.logo_link}
-                  verified={community.verified ?? false}
-                />
+                <>
+                  {community.published && (
+                    <CommmunityCard
+                      id={community.id}
+                      key={community.id}
+                      name={community.name}
+                      country={community.country}
+                      location={community.location}
+                      description={community.description}
+                      members={community._count.members}
+                      logoUrl={community.logo_link}
+                      verified={community.verified ?? false}
+                    />
+                  )}
+                </>
               ))
             : !communitiesList.isLoading && (
                 <div className="my-20 text-center sm:col-span-3 md:col-span-4">

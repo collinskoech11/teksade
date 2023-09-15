@@ -9,10 +9,12 @@ import { useState } from "react";
 import CustomButton from "../custom-components/button";
 import SectionTitle from "../custom-components/sectionTitle";
 import CommunityCardSkeleton from "../custom-components/skeletons/Community/CommunityCard";
+import { useRouter } from "next/router";
 
 export default function CreatedCommunitiesPage() {
   const theme = useMantineTheme();
   const { user } = useUser();
+  const router = useRouter();
   const queryClient = api.useContext();
   const communitiesCreatedByMember = api.members.getCommunitiesCreatedByMember.useQuery({ memberId: user?.id ?? "" });
   const deleteCreatedCommunity = api.communities.deleteCommunity.useMutation({
@@ -20,8 +22,6 @@ export default function CreatedCommunitiesPage() {
       void queryClient.members.getCommunitiesCreatedByMember.refetch({ memberId: user?.id ?? "" });
     },
   });
-
-  const dark = theme.colorScheme === "dark";
 
   function handleDelete(communityID: string) {
     openConfirmModal({
@@ -33,6 +33,7 @@ export default function CreatedCommunitiesPage() {
         deleteCreatedCommunity.mutate({
           communityID: communityID,
         });
+        void router.push("/communities/created");
       },
     });
   }
@@ -88,6 +89,15 @@ export default function CreatedCommunitiesPage() {
               />
             </div>
           ))}
+
+          {!communitiesCreatedByMember.data?.length && (
+            <div className="my-20 text-center sm:col-span-3 md:col-span-4">
+              It looks like you haven&apos;t added any communities to Teksade. Let&apos;s get started!
+              <div className="my-6 flex justify-center">
+                <CustomButton size="lg" className="text-base" variant="filled" type="submit" title="Add Community" onClickHandler={() => void router.push("/communities/new")} />
+              </div>
+            </div>
+          )}
         </div>
       )}
     </Container>

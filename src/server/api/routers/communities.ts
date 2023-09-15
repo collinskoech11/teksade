@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import { techFocusAreas, technologies } from "@/utils/constants";
 
 export const communitiesRouter = createTRPCRouter({
   getCommunityInfo: publicProcedure.input(z.object({ communityId: z.string() })).query(async ({ input, ctx }) => {
@@ -8,7 +7,6 @@ export const communitiesRouter = createTRPCRouter({
       const communityInfo = ctx.prisma.community.findUnique({
         where: {
           id: input.communityId,
-          published: true,
         },
         include: {
           members: {
@@ -38,7 +36,6 @@ export const communitiesRouter = createTRPCRouter({
       try {
         const communityList = await ctx.prisma.community.findMany({
           where: {
-            published: true,
             AND: [
               input.country
                 ? {
@@ -96,24 +93,47 @@ export const communitiesRouter = createTRPCRouter({
       }
     }),
 
-  getPopularCommunities: publicProcedure.query(async ({ ctx }) => {
-    try {
-      const popularCommnitiesFetch = await ctx.prisma.community.findMany({
-        where: {
-          published: true,
-        },
-        orderBy: {
-          members: {
-            _count: "desc",
+  getPopularCommunities: publicProcedure
+    .input(
+      z.object({
+        focus_area: z.string().array(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      interface WhereConditionType {
+        published: boolean;
+        focus_area?: {
+          in: string[];
+        };
+      }
+
+      const whereCondition: WhereConditionType = {
+        published: true,
+      };
+
+      // If "All" is not in the focus_area array, apply the focus_area filter
+      // Check if focus_area exists and if "All" is not included
+      if (input.focus_area && !input.focus_area.includes("All")) {
+        whereCondition.focus_area = {
+          in: input.focus_area,
+        };
+      }
+
+      try {
+        const popularCommnitiesFetch = await ctx.prisma.community.findMany({
+          where: whereCondition,
+          orderBy: {
+            members: {
+              _count: "desc",
+            },
           },
-        },
-        take: 10,
-      });
-      return popularCommnitiesFetch;
-    } catch (error) {
-      console.log(error);
-    }
-  }),
+          take: 10,
+        });
+        return popularCommnitiesFetch;
+      } catch (error) {
+        console.log(error);
+      }
+    }),
 
   // Get community details
   getCommunityDetails: publicProcedure
@@ -127,7 +147,6 @@ export const communitiesRouter = createTRPCRouter({
         const communityDetails = await ctx.prisma.community.findUnique({
           where: {
             id: input.communityId,
-            published: true,
           },
           include: {
             members: true,
@@ -156,6 +175,13 @@ export const communitiesRouter = createTRPCRouter({
         focusArea: z.string(),
         technologies: z.string().array().optional(),
         logo_url: z.string(),
+        github: z.string().url().optional(),
+        twitter: z.string().url().optional(),
+        linkedin: z.string().url().optional(),
+        website: z.string().url().optional(),
+        whatsapp: z.string().url().optional(),
+        phone: z.string().optional(),
+        youtube: z.string().url().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -169,6 +195,14 @@ export const communitiesRouter = createTRPCRouter({
             focus_area: input.focusArea,
             technologies: input.technologies,
             logo_link: input.logo_url,
+            github: input.github,
+            twitter: input.twitter,
+            linkedin: input.linkedin,
+            website: input.website,
+            whatsapp: input.whatsapp,
+            phone: input.phone,
+            youtube: input.youtube,
+
             creator: {
               connectOrCreate: {
                 where: {
@@ -250,6 +284,7 @@ export const communitiesRouter = createTRPCRouter({
         website: z.string().url().optional(),
         whatsapp: z.string().url().optional(),
         phone: z.string().optional(),
+        youtube: z.string().url().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -270,6 +305,7 @@ export const communitiesRouter = createTRPCRouter({
             website: input.website,
             whatsapp: input.whatsapp,
             phone: input.phone,
+            youtube: input.youtube,
           },
         });
         return communityUpdate.id;

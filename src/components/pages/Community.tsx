@@ -17,7 +17,7 @@ import { useMantineColorScheme } from "@mantine/core";
 import Checkmark from "@/components/custom-components/icons/checkmark";
 import Container from "@/components/custom-components/container";
 import CustomButton from "@/components/custom-components/button";
-import { CommunitySEO } from "@/components/SEO";
+import { CommunitySEO, PageSEO } from "@/components/SEO";
 import LikeButton from "@/components/custom-components/likeButton";
 import CommunitySkeleton from "@/components/custom-components/skeletons/Community/Community";
 import ImageSkeleton from "@/components/custom-components/skeletons/Community/FeaturedImage";
@@ -35,6 +35,7 @@ interface SocialLinksProps {
     website: string;
     whatsapp: string;
     phone: string;
+    youtube: string;
     [key: string]: string | undefined;
   };
 }
@@ -52,6 +53,7 @@ const SocialLinks = ({ links }: SocialLinksProps) => {
     website: FaGlobe,
     whatsapp: FaWhatsapp,
     phone: FaPhone,
+    youtube: FaYoutube,
   };
 
   return (
@@ -104,8 +106,8 @@ export default function SingleCommunityPage() {
     onSuccess: () => {
       void queryClient.communities.getCommunityInfo.refetch({ communityId: communityId as string });
       notifySuccess({
-        title: "Exit complete",
-        message: "You have left this community",
+        title: "Goodbye for now!",
+        message: "Adventure awaits! Feel free to come back anytime.",
       });
     },
   });
@@ -121,6 +123,7 @@ export default function SingleCommunityPage() {
     website: communityInfo.data?.website ?? "",
     whatsapp: communityInfo.data?.whatsapp ?? "",
     phone: communityInfo.data?.phone ?? "",
+    youtube: communityInfo.data?.youtube ?? "",
   };
 
   const likeCommunity = (communityId: string, memberId: string) => {
@@ -164,8 +167,8 @@ export default function SingleCommunityPage() {
       .then((returnValue) => {
         if (returnValue?._count.members) {
           notifySuccess({
-            title: "Welcome onboard",
-            message: "You are now a member",
+            title: "Excited to have you join us!",
+            message: "Cheers to the new beginnings!",
           });
           void queryClient.communities.getCommunityInfo.refetch();
         } else {
@@ -183,19 +186,9 @@ export default function SingleCommunityPage() {
     });
   };
 
-  console.log(communityInfo.data);
   return (
     <>
-      <CommunitySEO
-        name={communityInfo.data?.name ?? " "}
-        description={communityInfo.data?.description ?? " "}
-        logoLink={communityInfo.data?.logo_link ?? " "}
-        website={communityInfo.data?.website ?? " "}
-        technologies={communityInfo.data?.technologies ?? []}
-        country={communityInfo.data?.country ?? " "}
-        location={communityInfo.data?.location ?? " "}
-        focusArea={communityInfo.data?.focus_area ?? " "}
-      />
+      <PageSEO title={"Community"} description={siteMetadata.community_description} />
       <Container>
         {communityInfo.isLoading ? (
           <CommunitySkeleton />
@@ -209,7 +202,7 @@ export default function SingleCommunityPage() {
                   {communityInfo.data?.verified && (
                     <Tooltip withArrow label={siteMetadata.verificationTooltip} arrowSize={5}>
                       <Text className="align-middle">
-                        <Checkmark size={5} />
+                        <Checkmark  />
                       </Text>
                     </Tooltip>
                   )}
@@ -233,7 +226,7 @@ export default function SingleCommunityPage() {
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-x-20">
               {/* Image */}
               <div className="h-full w-full overflow-hidden rounded-lg shadow-lg">
-                <Image src={logoImage ?? "/img/hero.jpg"} alt="featured-image" className="h-full w-full object-cover object-center" width={900} height={500} loading="lazy" />
+                <Image src={logoImage ?? "/img/twitter-card.svg"} alt="featured-image" className="h-full w-full object-cover object-center" width={900} height={500} loading="lazy" />
               </div>
 
               {/* Description */}
@@ -241,17 +234,14 @@ export default function SingleCommunityPage() {
                 <div className="flex justify-between pt-5">
                   {/* CTA button */}
                   <div>
-                    <LoadingOverlay visible={addMemberToCommunity.isLoading} />
                     {!isMember ? (
                       <CustomButton
                         size="md"
                         color="indigo"
-                        title={"Join Community"}
+                        title={addMemberToCommunity.isLoading ? "Joining ..." : "Join Community"}
                         onClickHandler={() => {
                           memberInfo.data?.id && addMember2Community(communityId as string, memberInfo.data.id);
                         }}
-                        loadingText="Joining..."
-                        isLoading={addMemberToCommunity.isLoading}
                       />
                     ) : memberInfo.data?.id === communityInfo.data?.creatorId ? (
                       <Link href="/communities/created">
@@ -264,7 +254,7 @@ export default function SingleCommunityPage() {
                         }}
                         size="md"
                         color="indigo"
-                        title={"Leave Community"}
+                        title={removeMemberFromCommunity.isLoading ? "Exiting ..." : "Exit Community"}
                       />
                     )}
                   </div>
